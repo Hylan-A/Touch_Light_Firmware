@@ -200,7 +200,7 @@ async function refresh(){
     document.getElementById('setupLink').style.display=s.setup?'block':'none';
   } catch(e){ document.getElementById('status').textContent='Disconnected - retrying...'; }
 }
-refresh();setInterval(refresh,1500);
+refresh();setInterval(refresh,1000);
 </script></body></html>
 )html";
 
@@ -228,7 +228,7 @@ void sendDiagnostics()
   String json="{\"device\":\"";
   json.reserve(5000);
   json+=deviceName;
-  json+="\",\"firmware\":\"Universal V1.2.4 Console (test)\",\"uptime\":";
+  json+="\",\"firmware\":\"Universal V1.2.5 Console (test)\",\"uptime\":";
   json+=String(millis());
   json+=",\"wifi\":";
   json+=(connected?"true":"false");
@@ -868,8 +868,8 @@ void webControlBegin()
     }
   });
 
-  Serial.println("Wi-Fi setup: Universal V1.2.4 Console (test).");
-  diagLog("[SYSTEM] Firmware V1.2.4 started");
+  Serial.println("Wi-Fi setup: Universal V1.2.5 Console (test).");
+  diagLog("[SYSTEM] Firmware V1.2.5 started");
   optionalMqttBegin(deviceSuffix);
   server.on("/",HTTP_GET,sendControl);
   server.on("/diagnostics",HTTP_GET,sendDiagnosticsPage);

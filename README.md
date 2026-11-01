@@ -1,6 +1,6 @@
 # TECH 49 LAB — Touch Light 0008
 
-Universal firmware **V1.2.4** for the ESP32-C3 touch light. Based on V1.2.3, compiled/uploaded and watchdog display confirmed working by Hylan on November 1, 2026. V1.2.4 address-display checks passed; compilation and hardware verification pending.
+Universal firmware **V1.2.5** for the ESP32-C3 touch light. Based on V1.2.3, compiled/uploaded and watchdog display confirmed working by Hylan on November 1, 2026. V1.2.4 address display was confirmed on the user's PC. V1.2.5 switches control and Engineering status polling to one second; syntax and interval checks passed, ESP32 compilation and hardware validation pending.
 
 ## Arduino setup
 
@@ -12,6 +12,7 @@ The control page displays each unit's home web address, for example `http://tech
 
 - Touch on/off and brightness ramp; web control and optional Home Assistant/MQTT.
 - Browser names in diagnostic command entries.
+- One-second status refresh on control and Engineering pages.
 - Console chase strip, live diagnostics, color/text report exports.
 - 60-second loop watchdog, lifetime and resettable test counters.
 - Controller restart status indicator.

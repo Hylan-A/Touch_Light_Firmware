@@ -460,7 +460,7 @@ async function pollReveal(){
  }
  }catch(e){token='';set('revealMessage','Confirmation failed; try again.');}
 }
-refresh();setInterval(refresh,2000);setInterval(pollReveal,1200);
+refresh();setInterval(refresh,1000);setInterval(pollReveal,1200);
 </script></body></html>
 )diaghtml";
 
