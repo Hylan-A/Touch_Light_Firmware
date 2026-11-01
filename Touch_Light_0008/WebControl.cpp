@@ -112,6 +112,7 @@ details{text-align:left;margin-top:20px;border-top:2px solid #537492;padding-top
 aria-label="Exit help">&#10005; Exit</button>
 </div>
 <h2 id="name">Connecting...</h2>
+<p class="webAddress"><strong>Web address:</strong><br><a id="webAddress" style="color:#add9ff;overflow-wrap:anywhere">Checking...</a><br><small>Share with another phone on the same home Wi-Fi.</small></p>
 <div class="telemetry"><span id="wifiStatus">Wi-Fi: checking</span><span id="mqttStatus">MQTT: checking</span></div>
 <div class="consoleReadout"><div><small>BRIGHTNESS PRESET</small><h2 id="status" aria-live="polite">Checking light...</h2></div><strong><span id="percent">--</span>%</strong></div>
 <div class="segments" id="segments" aria-hidden="true"></div><div class="powerControls">
@@ -185,6 +186,8 @@ async function refresh(){
     if(!resp.ok) throw new Error('HTTP '+resp.status);
     const s=await resp.json();
     document.getElementById('name').textContent=s.name;
+    const address=document.getElementById('webAddress');
+    address.textContent=s.homeWebAddress;address.href=s.homeWebAddress;
     document.getElementById('status').textContent=s.power?'LIGHT ON':'LIGHT OFF — preset';
     document.getElementById('powerOn').setAttribute('aria-pressed',String(s.power));
     document.getElementById('powerOff').setAttribute('aria-pressed',String(!s.power));
@@ -225,7 +228,7 @@ void sendDiagnostics()
   String json="{\"device\":\"";
   json.reserve(5000);
   json+=deviceName;
-  json+="\",\"firmware\":\"Universal V1.2.3 Console (test)\",\"uptime\":";
+  json+="\",\"firmware\":\"Universal V1.2.4 Console (test)\",\"uptime\":";
   json+=String(millis());
   json+=",\"wifi\":";
   json+=(connected?"true":"false");
@@ -342,6 +345,9 @@ void sendState()
   json += String(brightness);
   json += ",\"name\":\"";
   json += deviceName;
+  json += "\",\"homeWebAddress\":\"http://";
+  json += hostName;
+  json += ".local";
   json += "\",\"mode\":\"";
   json += apRequest ? "Direct Wi-Fi" : "Home Wi-Fi";
   json += "\",\"ip\":\"";
@@ -862,8 +868,8 @@ void webControlBegin()
     }
   });
 
-  Serial.println("Wi-Fi setup: Universal V1.2.3 Console (test).");
-  diagLog("[SYSTEM] Firmware V1.2.3 started");
+  Serial.println("Wi-Fi setup: Universal V1.2.4 Console (test).");
+  diagLog("[SYSTEM] Firmware V1.2.4 started");
   optionalMqttBegin(deviceSuffix);
   server.on("/",HTTP_GET,sendControl);
   server.on("/diagnostics",HTTP_GET,sendDiagnosticsPage);

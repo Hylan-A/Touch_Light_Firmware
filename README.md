@@ -1,10 +1,12 @@
 # TECH 49 LAB — Touch Light 0008
 
-Universal firmware **V1.2.3** for the ESP32-C3 touch light. Compiled, uploaded, and watchdog display confirmed working by Hylan on November 1, 2026.
+Universal firmware **V1.2.4** for the ESP32-C3 touch light. Based on V1.2.3, compiled/uploaded and watchdog display confirmed working by Hylan on November 1, 2026. V1.2.4 address-display checks passed; compilation and hardware verification pending.
 
 ## Arduino setup
 
 Open `Touch_Light_0008/Touch_Light_0008.ino`. Select **ESP32C3 Dev Module**, enable **USB CDC On Boot**, and select the board's COM port. Keep the ESP32 core and library settings used for the working installation.
+
+The control page displays each unit's home web address, for example `http://tech49-light-b2f180.local`. Share it with another phone on the same home network. The IP address remains available as a fallback.
 
 ## Features
 

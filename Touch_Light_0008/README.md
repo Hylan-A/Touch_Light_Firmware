@@ -1,7 +1,7 @@
-# Tech 49 Lab Touch Light 0008 V1.2.3 (test)
+# Tech 49 Lab Touch Light 0008 V1.2.4 (test)
 
-Watchdog dot: 500 ms green, 500 ms dark. Uses an explicit browser timer instead of a CSS pulse. Fresh successful-feed reports enable blinking; after seven seconds without feed progress or responses the indicator becomes gray. No watchdog timeout or control changes.
+Adds a visible, clickable Web address beneath the light name on the control page. The firmware builds this address from the actual unit hostname; B2F180 shows http://tech49-light-b2f180.local. Share it with phones on the same home network. The existing mode and IP display remains available as a fallback if local hostname resolution is unavailable. On a direct connection, use 192.168.4.1; the displayed home address is for use after home Wi-Fi setup.
 
-Extract and open Touch_Light_0008.ino in Arduino IDE, using your working board settings. Compile and upload. Close/reopen or refresh the Engineering page; confirm firmware V1.2.3 before checking the blink.
+Includes the V1.2.3 half-second watchdog blink confirmed working by Hylan.
 
-Validation: JavaScript syntax and simulated half-second phase/stale-update checks passed. ESP32 compilation and physical phone verification remain for the user.
+Extract and open Touch_Light_0008.ino with the same Arduino board/core settings used for V1.2.3. Compile/upload and reopen the control page. V1.2.4 JavaScript syntax and mocked address display checks passed; ESP32 compilation and hardware testing pending.
