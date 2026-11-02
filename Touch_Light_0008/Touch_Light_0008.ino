@@ -248,7 +248,7 @@ void setup()
 
   Serial.println();
   Serial.println("-----------------------------");
-  Serial.println("Touch Light 0008 Bench Test");
+  Serial.println("TECH 49 LAB - Touch Light");
   Serial.printf("Touch GPIO%u / PWM GPIO%u\n", TOUCH_PIN, LED_PWM_PIN);
   Serial.println("-----------------------------");
 
