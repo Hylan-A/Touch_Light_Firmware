@@ -1,6 +1,6 @@
 /*
   Touch Light Project 
-  Seeed XIAO ESP32-C3 on Rev1H board 0008 (GPIO21 touch, GPIO4 PWM)
+  Seeed XIAO ESP32-C3 on Rev1H board (GPIO21 touch, GPIO4 PWM)
   Software Rev V1.2.6
 
   Touch input, LED PWM output and heartbeat GPIO are configured in BoardConfig.h.
