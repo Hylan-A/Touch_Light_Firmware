@@ -1,5 +1,6 @@
 #include "WebControl.h"
 #include "BoardConfig.h"
+#include "DeviceIdentity.h"
 #include "OptionalMqtt.h"
 #include "Diagnostics.h"
 #include "DiagnosticsPage.h"
@@ -228,7 +229,7 @@ void sendDiagnostics()
   String json="{\"device\":\"";
   json.reserve(5000);
   json+=deviceName;
-  json+="\",\"firmware\":\"Universal V1.2.5 Console (test)\",\"uptime\":";
+  json+="\",\"firmware\":\"Universal V1.2.6 Console (test)\",\"uptime\":";
   json+=String(millis());
   json+=",\"wifi\":";
   json+=(connected?"true":"false");
@@ -821,9 +822,8 @@ bool resetWiFiIfTouchHeld()
 
 void webControlBegin()
 {
-  char suffix[7];
-  snprintf(suffix,sizeof(suffix),"%06lX",
-           static_cast<unsigned long>(ESP.getEfuseMac() & 0xFFFFFFULL));
+  char suffix[13];
+  touchLightDeviceId(ESP.getEfuseMac(), suffix);
   deviceSuffix=suffix;
   deviceName="Touch Light "+deviceSuffix;
   hostName="tech49-light-"+deviceSuffix;
@@ -868,8 +868,8 @@ void webControlBegin()
     }
   });
 
-  Serial.println("Wi-Fi setup: Universal V1.2.5 Console (test).");
-  diagLog("[SYSTEM] Firmware V1.2.5 started");
+  Serial.println("Wi-Fi setup: Universal V1.2.6 Console (test).");
+  diagLog("[SYSTEM] Firmware V1.2.6 started");
   optionalMqttBegin(deviceSuffix);
   server.on("/",HTTP_GET,sendControl);
   server.on("/diagnostics",HTTP_GET,sendDiagnosticsPage);

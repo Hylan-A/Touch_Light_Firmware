@@ -1,23 +1,21 @@
-# TECH 49 LAB — Touch Light 0008
+# Tech 49 Lab Touch Light 0008 — V1.2.6 (test)
 
-Universal firmware **V1.2.5** for the ESP32-C3 touch light. Based on V1.2.3, compiled/uploaded and watchdog display confirmed working by Hylan on November 1, 2026. V1.2.4 address display was confirmed on the user's PC. V1.2.5 switches control and Engineering status polling to one second; syntax and interval checks passed, ESP32 compilation and hardware validation pending.
+Removes the fixed board-0008 startup banner; startup now says TECH 49 LAB - Touch Light. The sketch folder retains its project name.
 
-## Arduino setup
+Fixes duplicate device identities. V1.2.5 masked the low 24 bits of ESP.getEfuseMac(), selecting the manufacturer prefix in reverse byte order. V1.2.6 uses all six factory MAC bytes, formatted in normal byte order as 12 uppercase hex digits. The full MAC avoids truncation collisions across different manufacturer prefixes. Each normally provisioned ESP32 receives a stable hardware-derived ID.
 
-Open `Touch_Light_0008/Touch_Light_0008.ino`. Select **ESP32C3 Dev Module**, enable **USB CDC On Boot**, and select the board's COM port. Keep the ESP32 core and library settings used for the working installation.
+The ID supplies the device name, setup SSID, lowercase mDNS hostname, MQTT client ID/topics and Home Assistant discovery identity. Example only: MAC 80:F1:B2:12:34:56 produces Tech49-Light-80F1B2123456 and http://tech49-light-80f1b2123456.local. Read YOUR actual ID from Serial Monitor after upload.
 
-The control page displays each unit's home web address, for example `http://tech49-light-b2f180.local`. Share it with another phone on the same home network. The IP address remains available as a fallback.
+## Install and migrate
 
-## Features
+Open Touch_Light_0008/Touch_Light_0008.ino with the same ESP32-C3 settings used for V1.2.5. Compile/upload over USB. No intentional erase of home Wi-Fi, MQTT settings, setup password, reset counters or test baseline occurs. Hold-to-reset behavior is unchanged.
 
-- Touch on/off and brightness ramp; web control and optional Home Assistant/MQTT.
-- Browser names in diagnostic command entries.
-- One-second status refresh on control and Engineering pages.
-- Console chase strip, live diagnostics, color/text report exports.
-- 60-second loop watchdog, lifetime and resettable test counters.
-- Controller restart status indicator.
-- Engineering watchdog dot: half-second green, half-second dark, enabled by fresh reported watchdog feed progress.
+Board 0012: upload this fix before initial Wi-Fi setup. Record the new setup SSID and existing per-board setup password from Serial Monitor at 115200 baud. Join that network and open http://192.168.4.1 to configure the owner's home Wi-Fi.
 
-Wi-Fi and broker credentials are entered during setup and stored on the controller. They are not embedded in the source.
+Board 0008: saved home Wi-Fi and MQTT credentials remain; hostname and MQTT identity change. Open its new hostname (or router-assigned IP), update Home Screen/browser shortcuts, and name the browser again for the new address. Home Assistant discovers a new entity when MQTT is enabled. Review entity IDs in dashboards/automations. After verifying the new entity, remove the obsolete B2F180 entity/discovery entry using Home Assistant or MQTT management; this firmware does not automatically delete old retained discovery records, because another old board may still use them.
 
-The sketch folder contains source and previous change notes. iPhone printing and automatic recovery under forced faults require separate validation; the feed indicator alone does not prove watchdog reset operation.
+Keep using one-second web refresh and half-second watchdog blink.
+
+## Validation
+
+Actual DeviceIdentity.h tested with a host C++ compiler: same vendor/different serial, different vendor/same serial, leading zeroes, expected byte order and repeated-call stability. Both embedded page scripts pass JavaScript syntax checks. ESP32 compilation and on-board validation pending. Verify boards 0008 and 0012 now print different IDs before operating both together.
