@@ -2,9 +2,9 @@
 #include <Arduino.h>
 
 /*
-  Tech 49 Lab - Touch Light board 0008 GPIO configuration.
+  Tech 49 Lab - Touch Light board  GPIO configuration.
 
-  Board 0008 ESP32-C3 GPIO21 touch and GPIO4 PWM were verified in the
+   ESP32-C3 GPIO21 touch and GPIO4 PWM were verified in the
   Tech 49 Lab on Oct 30, 2026 (local touch/dimming/serial logs).
 
   Verified in the Rev1H KiCad PCB routing (U2 through R3 to Q1):
