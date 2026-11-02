@@ -1,5 +1,5 @@
 /*
-  Touch Light Project — Board 0008
+  Touch Light Project 
   Seeed XIAO ESP32-C3 on Rev1H board 0008 (GPIO21 touch, GPIO4 PWM)
   Software Rev V1.2.6
 

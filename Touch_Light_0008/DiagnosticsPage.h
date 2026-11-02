@@ -367,7 +367,7 @@ function eventTime(phoneNow, boardUptime, eventUptime){
  const time=eventDate.toLocaleTimeString(undefined,{
   hour:'numeric',minute:'2-digit',second:'2-digit',hour12:true
  });
- return sameDay?time:eventDate.toLocaleDateString()+' '+time;
+return eventDate.toLocaleDateString()+' '+time;
 }
 async function refresh(){
  try{
