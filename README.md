@@ -1,4 +1,4 @@
-# Tech 49 Lab Touch Light 0008 — V1.2.6 (test)
+# Tech 49 Lab Touch Light — V1.2.6 (test)
 
 Removes the fixed board-0008 startup banner; startup now says TECH 49 LAB - Touch Light. The sketch folder retains its project name.
 
