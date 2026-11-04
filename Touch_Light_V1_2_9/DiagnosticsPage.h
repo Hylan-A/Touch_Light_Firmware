@@ -23,9 +23,12 @@ a{color:#7dd3fc}p{line-height:1.5}small{color:#b8cce3}
 font:15px ui-monospace,Menlo,monospace}
 /* Readable Wi-Fi signal rating with a dot; color is not the only cue. */
 .signalQuality{display:inline-flex;align-items:center;gap:7px}
-.signalDot{width:20px;height:20px;border-radius:50%;flex:none;
-background:radial-gradient(circle at 30% 25%,#ffffffaa,currentColor 55%,#152032 100%);
-border:1px solid #ffffff66;box-shadow:inset 0 2px 3px #ffffff66,inset 0 -3px 4px #0008,0 0 11px currentColor}
+.signalBars{display:inline-flex;align-items:flex-end;gap:3px;height:22px;flex:none}
+.signalBars i{display:block;width:5px;border-radius:2px 2px 0 0;background:#435367;border:1px solid #70809944}
+.signalBars i:nth-child(1){height:6px}.signalBars i:nth-child(2){height:10px}
+.signalBars i:nth-child(3){height:14px}.signalBars i:nth-child(4){height:18px}
+.signalBars i:nth-child(5){height:22px}
+.signalBars i.active{background:currentColor;border-color:currentColor;box-shadow:0 0 5px currentColor}
 .signalQuality.excellent{color:#4ade80}
 .signalQuality.good{color:#60a5fa}
 .signalQuality.marginal{color:#facc15}
@@ -62,6 +65,14 @@ font-size:14px;font-weight:600;text-align:left}
 #restartButton{background:#b45309;min-height:52px;font-weight:700}
 #restartButton:disabled{background:#64748b;opacity:.75}
 #restartMessage{color:#fde68a;min-height:1.3em}
+.soundSetting{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.soundButton{background:linear-gradient(160deg,#338ac9,#16456e);border:1px solid #8bd2ff;box-shadow:inset 0 2px 2px #fff5,0 3px 8px #0008;min-width:190px}
+.soundButton[aria-pressed=false]{background:linear-gradient(160deg,#39506a,#1a2939);border-color:#66839b}
+#buttonSoundState{min-width:40px;color:#a8edce}
+.holdButton{position:relative;overflow:hidden;user-select:none;-webkit-user-select:none;touch-action:none;cursor:pointer}
+.holdButton:before{content:"";position:absolute;inset:0 auto 0 0;width:var(--hold-progress,0%);background:#ffffff38;pointer-events:none}
+.holdButton.holding{outline:2px solid #fcd34d}
+.holdButton:disabled{cursor:default}
 .resetHint{display:block;line-height:1.5;margin-top:12px}
 
 /* Tech 49 Lab spacecraft console: local assets only. */
@@ -113,7 +124,7 @@ aria-label="Back to Touch Light controls">&#8592; Back to Lamp</button>
 <div class="row"><span>Home Wi-Fi</span><span id="wifi">—</span></div>
 <div class="row"><span>Signal strength</span>
 <span id="rssi" class="signalQuality offline">
-<span class="signalDot" aria-hidden="true"></span>
+<span class="signalBars" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
 <span id="rssiText">Checking...</span>
 </span></div>
 <div class="row"><span>IP address</span><span id="ip">—</span></div>
@@ -124,11 +135,14 @@ Good (−61 to −70 dBm), Marginal (−71 to −80 dBm),
 Weak (below −80 dBm). Gray means not connected.</small>
 </div>
 <div class="card"><h2>Browser preferences</h2>
-<label for="buttonSoundToggle">🔊 Button Sound</label>
-<input type="checkbox" id="buttonSoundToggle" onchange="setButtonSound(this.checked)">
-<strong id="buttonSoundState">ON</strong>
+<div class="soundSetting"><button type="button" id="buttonSoundToggle" class="soundButton" aria-pressed="true" onclick="setButtonSound(!buttonSound)" aria-label="Toggle button sound">🔊 Button Sound</button><strong id="buttonSoundState" role="status">ON</strong></div>
 <p><small>Same short beep for every web button. Saved separately on this browser; the physical touch pad remains silent.</small></p>
-<div><strong>Current Browser: </strong><span id="currentBrowserName">Unnamed browser</span></div>
+<div class="phonePanel"><label for="phoneName">Name this phone or browser</label>
+<input id="phoneName" maxlength="48" placeholder="e.g. Hylan’s iPhone" autocomplete="off">
+<button type="button" onclick="savePhoneName()">Save name</button>
+<p id="phoneMessage" role="status" aria-live="polite"></p>
+<small>Saved on this browser for this lamp address. Used to identify web commands in the diagnostic log. Home Assistant retains its own label.</small></div>
+<p><small><a href="/setup">Home Wi-Fi setup</a> (use when configuring or changing networks).</small></p>
 </div>
 <div class="card"><h2>Live system log</h2>
 <small>Updates every two seconds. These messages live in RAM and reset
@@ -178,7 +192,7 @@ label; do not post it publicly.</small></div>
 <div class="row"><span>Recorded starts</span><span id="resetBoots">—</span></div>
 <div class="row"><span>Watchdog resets</span><span id="resetWatchdog">—</span></div>
 <div class="row"><span>Web restarts</span><span id="resetWeb">—</span></div>
-<button type="button" onclick="resetTestCounts()">Reset Test Counts</button><p id="testResetMessage" role="status"></p>
+<button type="button" id="resetCountsButton" class="holdButton" data-hold="reset" aria-label="Hold for two seconds to reset test counts">Hold 2 sec — Reset Test Counts</button><p id="testResetMessage" role="status"></p>
 <h3>Lifetime totals</h3>
 <div class="row"><span>Recorded starts</span><span id="lifetimeBoots">—</span></div>
 <div class="row"><span>Watchdog resets</span><span id="lifetimeWatchdog">—</span></div>
@@ -188,7 +202,7 @@ controller's main loop stops responding for about 60 seconds.
 Counts survive restarts. The previous boot time is estimated using this
 iPhone's clock; no historical real-time clock is installed.</small>
 <button type="button" id="restartButton"
-onclick="requestRestart()">&#8635; Restart Controller</button>
+class="holdButton" data-hold="restart" aria-label="Hold for two seconds to restart controller">&#8635; Hold 2 sec — Restart Controller</button>
 <p><i id="restartLed" class="led" aria-hidden="true"></i><span id="restartStatus" role="status">Checking connection</span></p>
 <p id="restartMessage" role="status" aria-live="polite"></p>
 <small>Restart does NOT erase Wi-Fi or Home Assistant settings.
@@ -225,7 +239,7 @@ document.addEventListener('click',e=>{
 
 function updateSoundSetting(){
  const c=document.getElementById('buttonSoundToggle');
- if(c){c.checked=buttonSound;document.getElementById('buttonSoundState').textContent=buttonSound?'ON':'OFF';}
+ if(c){c.setAttribute('aria-pressed',String(buttonSound));document.getElementById('buttonSoundState').textContent=buttonSound?'ON':'OFF';}
 }
 function setButtonSound(enabled){
  buttonSound=enabled;
@@ -238,6 +252,20 @@ document.addEventListener('DOMContentLoaded',updateSoundSetting);
 const PHONE_NAME_KEY='tech49.browserName.v1';
 let browserName='';
 try{browserName=localStorage.getItem(PHONE_NAME_KEY)||'';}catch(e){}
+function savePhoneName(){
+ const input=$('phoneName'),name=input.value.trim();
+ if(new TextEncoder().encode(name).length>48 || /[\x00-\x1f\x7f\[\]]/.test(name)){
+  set('phoneMessage','Use up to 48 UTF-8 bytes, without brackets or control characters.');return;
+ }
+ try{localStorage.setItem(PHONE_NAME_KEY,name);browserName=name;
+  set('phoneMessage',name?'✓ Name Saved Successfully — Current Browser: '+name+'. Web commands will use this name in diagnostic logs.':'✓ Name cleared; web commands will show WEB.');
+  set('currentBrowserName',name||'Unnamed browser');
+ }catch(e){set('phoneMessage','Browser storage unavailable; name was not saved.');}
+}
+document.addEventListener('DOMContentLoaded',()=>{
+ $('phoneName').value=browserName;
+ set('phoneMessage',browserName?'Current Browser: '+browserName:'Current Browser: Unnamed');
+});
 
 let token='',shownAt=0;
 let logPaused=false;
@@ -252,10 +280,39 @@ function updateWatchdogLed(now){
 setInterval(()=>updateWatchdogLed(Date.now()),50);
 function restartStatus(kind,text){$('restartLed').className='led '+kind;set('restartStatus',text);}
 async function resetTestCounts(){
- if(!confirm('Reset test counts to zero? Lifetime totals and settings will be retained.'))return;
  try{await post('/api/diag/test/reset',{epoch:String(Date.now())});set('testResetMessage','Test counts reset.');await refresh();}
  catch(e){set('testResetMessage','Reset not confirmed. Check connection and retry.');}
 }
+// Destructive operations require a continuous 2-second hold; releasing,
+// dragging away, switching windows, or canceling touch aborts the operation.
+function installHoldButton(id,action){
+ const b=$(id);let timer=null,frame=null,start=0,triggered=false,active=false;
+ const cancel=()=>{if(timer!==null)clearTimeout(timer);if(frame!==null)cancelAnimationFrame(frame);
+  timer=null;frame=null;active=false;b.classList.remove('holding');b.style.removeProperty('--hold-progress');};
+ const tick=()=>{if(!active)return;b.style.setProperty('--hold-progress',Math.min(100,(performance.now()-start)/20)+'%');frame=requestAnimationFrame(tick);};
+ b.addEventListener('pointerdown',e=>{
+  if(b.disabled || !e.isPrimary || (e.pointerType==='mouse'&&e.button!==0))return;
+  e.preventDefault();cancel();active=true;triggered=false;start=performance.now();
+  try{b.setPointerCapture(e.pointerId);}catch(err){}
+  b.classList.add('holding');tick();
+  timer=setTimeout(()=>{if(!active||b.disabled)return;triggered=true;cancel();action();},2000);
+ });
+ b.addEventListener('pointerup',cancel);b.addEventListener('pointercancel',cancel);
+ b.addEventListener('lostpointercapture',cancel);
+ b.addEventListener('pointermove',e=>{if(active){const r=b.getBoundingClientRect();
+  if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)cancel();}});
+ window.addEventListener('blur',cancel);document.addEventListener('visibilitychange',()=>{if(document.hidden)cancel();});
+ // Keyboard accessibility: holding Space/Enter for two seconds also works.
+ b.addEventListener('keydown',e=>{if((e.key===' '||e.key==='Enter')&&!e.repeat&&!active){
+  e.preventDefault();active=true;start=performance.now();b.classList.add('holding');tick();
+  timer=setTimeout(()=>{if(!active)return;cancel();action();},2000);}});
+ b.addEventListener('keyup',e=>{if(e.key===' '||e.key==='Enter'){e.preventDefault();cancel();}});
+ b.addEventListener('click',e=>e.preventDefault());
+}
+document.addEventListener('DOMContentLoaded',()=>{
+ installHoldButton('resetCountsButton',resetTestCounts);
+ installHoldButton('restartButton',requestRestart);
+});
 setInterval(()=>{
  const now=Date.now();
  if(now-lastHeard>7000){$('watchdogLed').className='led';set('watchdogState','Updates stale / connection unavailable');if(!restartPending)restartStatus('','Offline');}
@@ -406,6 +463,9 @@ function updateSignal(rssi,connected){
  const state=classifySignal(rssi,connected);
  const indicator=$('rssi');
  indicator.className='signalQuality '+state.css;
+ const bars=indicator.querySelectorAll('.signalBars i');
+ const count=!connected?0:rssi>=-60?5:rssi>=-67?4:rssi>=-73?3:rssi>=-80?2:1;
+ bars.forEach((bar,index)=>bar.classList.toggle('active',index<count));
  set('rssiText',state.rating+(connected?' ('+rssi+' dBm)':''));
  indicator.setAttribute('aria-label','Wi-Fi signal: '+state.rating+
   (connected?', '+rssi+' dBm':''));
@@ -462,9 +522,6 @@ async function refresh(){
 }
 async function requestRestart(){
  // A confirmed request only: leave factory reset on the physical touch pad.
- if(!confirm('Restart the Touch Light controller?\\n\\n'+
-  'The light will turn OFF. Wi-Fi and Home Assistant will disconnect briefly.'+
-  '\\nSaved settings will NOT be erased.'))return;
  if(!latestSnapshot){set('restartMessage','Wait for a controller response before restarting.');return;}
  restartBaseline=latestSnapshot.resetBoots;
  const button=$('restartButton');
