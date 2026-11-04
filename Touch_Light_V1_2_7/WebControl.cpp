@@ -229,7 +229,7 @@ void sendDiagnostics()
   String json="{\"device\":\"";
   json.reserve(5000);
   json+=deviceName;
-  json+="\",\"firmware\":\"Universal V1.2.6 Console (test)\",\"uptime\":";
+  json+="\",\"firmware\":\"Universal V1.2.7 Console (test)\",\"uptime\":";
   json+=String(millis());
   json+=",\"wifi\":";
   json+=(connected?"true":"false");
@@ -868,8 +868,8 @@ void webControlBegin()
     }
   });
 
-  Serial.println("Wi-Fi setup: Universal V1.2.6 Console (test).");
-  diagLog("[SYSTEM] Firmware V1.2.6 started");
+  Serial.println("Wi-Fi setup: Universal V1.2.7 Console (test).");
+  diagLog("[SYSTEM] Firmware V1.2.7 started");
   optionalMqttBegin(deviceSuffix);
   server.on("/",HTTP_GET,sendControl);
   server.on("/diagnostics",HTTP_GET,sendDiagnosticsPage);
