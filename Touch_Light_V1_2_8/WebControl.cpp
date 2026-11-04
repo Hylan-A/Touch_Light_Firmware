@@ -5,6 +5,7 @@
 #include "Diagnostics.h"
 #include "DiagnosticsPage.h"
 #include "ResetMonitor.h"
+#include "FirmwareIdentity.h"
 
 #include <WiFi.h>
 #include <WebServer.h>
@@ -98,13 +99,20 @@ input:not([type=checkbox]):not([type=range]),select{width:100%;min-width:0;backg
 input[type=range]{width:100%;height:44px;accent-color:#77bfff}
 .mainHeader{padding:6px 75px 8px 0;text-align:left}.mainHeader small{letter-spacing:.18em}.exitButton{right:0;top:0;min-width:65px;padding:8px;margin:0;background:#34485e}
 .consoleReadout{display:flex;justify-content:space-between;align-items:end;gap:14px;border-top:1px solid #44627e;padding-top:18px;margin-top:16px;text-align:left}.consoleReadout strong{font-size:clamp(40px,13vw,68px);font-variant-numeric:tabular-nums;color:#b3dcff;line-height:1}.consoleReadout small{display:block;font-size:12px;letter-spacing:.1em}
-.powerControls{display:flex;gap:12px}.powerControls button{flex:1;margin:10px 0;min-width:0;font-size:21px;min-height:65px}.on{background:#5d2934;border-color:#bb6574}.on[aria-pressed=true]{background:#b52942;box-shadow:0 0 20px #f43f5e44}.off{background:#224b3c;border-color:#519c79}.off[aria-pressed=true]{background:#176a45;box-shadow:0 0 20px #22c55e22}
+.powerControls{display:flex;gap:12px}.powerControls button{flex:1;margin:10px 0;min-width:0;font-size:21px;min-height:65px}.on{background:#5d2934;border-color:#bb6574}.on[aria-pressed=true]{background:#e01d39;box-shadow:0 0 24px #ff3f60aa,inset 0 2px 2px #ffffff44}.off{background:#224b3c;border-color:#519c79}.off[aria-pressed=true]{background:#0cb65d;box-shadow:0 0 24px #22ff88aa,inset 0 2px 2px #ffffff44}
 .segments{height:17px;border-radius:4px;background:repeating-linear-gradient(90deg,transparent 0 calc(10% - 4px),#101a29 calc(10% - 4px) 10%),linear-gradient(90deg,#77bfff var(--fill,0%),#33475d var(--fill,0%));margin:18px 0 8px}
 .telemetry{display:flex;flex-wrap:wrap;gap:8px;margin:15px 0}.telemetry span{flex:1;padding:11px;background:#101c2c;border:1px solid #4b6480;border-radius:9px;font-size:13px}
 details{text-align:left;margin-top:20px;border-top:2px solid #537492;padding-top:15px}summary{cursor:pointer;color:#add9ff;font-weight:700;letter-spacing:.1em;min-height:44px;padding:8px 0}.phonePanel{margin-top:16px;padding-top:16px;border-top:1px solid #44627e}.phonePanel label{display:block;margin-bottom:9px;font-weight:650}.phonePanel button{margin-left:0}.phonePanel small{display:block;line-height:1.5}.phonePanel p{min-height:1.2em;font-size:14px}
 .row{flex-wrap:wrap;overflow-wrap:anywhere}.row span:last-child{max-width:65%}.row span:first-child{flex:1}
 @media(max-width:390px){body{padding:0 10px}.card{padding:16px;border-left-width:6px}.row span:last-child{max-width:60%}}
 
+
+/* Raised console fader; native input remains a full-height touch target. */
+#brightness::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:18px;height:32px;border-radius:4px;border:1px solid #a7d7fa;background:repeating-linear-gradient(0deg,transparent 0 6px,#102d4c 6px 8px,transparent 8px 11px),linear-gradient(90deg,#20466c,#d7e9f7 42%,#2e83cc 68%,#123b67);box-shadow:inset 2px 0 3px #fff8,2px 3px 7px #0009,0 0 8px #42a5f5}
+#brightness{appearance:none;-webkit-appearance:none;background:linear-gradient(#314b65,#17283b);border-radius:20px}
+#brightness::-moz-range-thumb{width:18px;height:32px;border-radius:4px;border:1px solid #a7d7fa;background:linear-gradient(90deg,#20466c,#d7e9f7,#2e83cc,#123b67);box-shadow:2px 3px 7px #0009,0 0 8px #42a5f5}
+.engineeringButton{display:block;margin:18px auto 6px;min-width:190px;padding:12px 18px;min-height:48px;font-size:15px;letter-spacing:.09em;color:#a6dcff;background:linear-gradient(#526c86,#223b54);border:1px solid #61b9ff;box-shadow:inset 0 2px 2px #fff5,0 0 10px #2694eb77,0 4px 7px #0008}
+.engineeringButton:active{transform:translateY(2px);box-shadow:inset 0 2px 6px #0009,0 0 13px #4bbcff}
 </style></head>
 <body><div class="card">
 <div class="mainHeader">
@@ -123,7 +131,8 @@ aria-label="Exit help">&#10005; Exit</button>
 <input aria-label="Brightness preset" type="range" id="brightness" min="5" max="255" value="180"
        oninput="showBrightness(this.value)" onchange="setBrightness(this.value)">
 <p><small id="network">Local network control</small></p>
-<details><summary>ENGINEERING</summary><small>Setup, diagnostics, reboot and recovery information.</small><p id="setupLink" style="display:none"><a href="/setup">Set up home Wi-Fi</a></p>
+<button type="button" class="engineeringButton" onclick="window.location.assign('/diagnostics')">⚙ ENGINEERING</button>
+<details><summary>MORE SETTINGS</summary><small>Setup, diagnostics, reboot and recovery information.</small><p id="setupLink" style="display:none"><a href="/setup">Set up home Wi-Fi</a></p>
 <button type="button" class="navButton"
 onclick="window.location.assign('/diagnostics')"
 aria-label="Open system diagnostics and live log">
@@ -149,17 +158,42 @@ aria-labelledby="exitHelpTitle">
 </div>
 <script>
 
+// Shared browser-local audio preference. A click is a user gesture, so the
+// Web Audio oscillator is permitted on modern mobile browsers.
+const SOUND_KEY='tech49.buttonSound.v1';
+let buttonSound=true;
+try{buttonSound=localStorage.getItem(SOUND_KEY)!=='off';}catch(e){}
+function playButtonBeep(){
+ if(!buttonSound)return;
+ try{
+  const Ctx=window.AudioContext||window.webkitAudioContext;
+  if(!Ctx)return;
+  const ctx=window.tech49Audio||(window.tech49Audio=new Ctx());
+  if(ctx.state==='suspended')ctx.resume();
+  const osc=ctx.createOscillator(),gain=ctx.createGain(),t=ctx.currentTime;
+  osc.type='sine';osc.frequency.value=880;
+  gain.gain.setValueAtTime(0.0001,t);
+  gain.gain.exponentialRampToValueAtTime(0.09,t+0.008);
+  gain.gain.exponentialRampToValueAtTime(0.0001,t+0.075);
+  osc.connect(gain);gain.connect(ctx.destination);osc.start(t);osc.stop(t+0.078);
+ }catch(e){} // Audio must never interrupt the light or diagnostics controls.
+}
+document.addEventListener('click',e=>{
+ const b=e.target.closest('button,summary');
+ if(b&&!b.disabled)playButtonBeep();
+},true);
+
 const PHONE_NAME_KEY='tech49.browserName.v1';
 let browserName='';
 try{browserName=localStorage.getItem(PHONE_NAME_KEY)||'';}catch(e){}
 document.getElementById('phoneName').value=browserName;
+document.getElementById('phoneMessage').textContent=browserName?'Current Browser: '+browserName:'Current Browser: Unnamed';
 function savePhoneName(){
  const name=document.getElementById('phoneName').value.trim();
  if(new TextEncoder().encode(name).length>48 || /[\x00-\x1f\x7f\[\]]/.test(name)){
   document.getElementById('phoneMessage').textContent='Use up to 48 UTF-8 bytes, without brackets or control characters.';return;
  }
- browserName=name;
- try{localStorage.setItem(PHONE_NAME_KEY,name);document.getElementById('phoneMessage').textContent=name?'Saved for this browser.':'Name cleared; commands will show WEB.';}
+ try{localStorage.setItem(PHONE_NAME_KEY,name);browserName=name;document.getElementById('phoneMessage').textContent=name?'✓ Name Saved Successfully — Current Browser: '+name+'. This name will identify web commands in diagnostic logs.':'✓ Name cleared; commands will show WEB.';}
  catch(e){document.getElementById('phoneMessage').textContent='Used for this page only; browser storage is unavailable.';}
 }
 let sliderEditing=false;
@@ -229,7 +263,22 @@ void sendDiagnostics()
   String json="{\"device\":\"";
   json.reserve(5000);
   json+=deviceName;
-  json+="\",\"firmware\":\"Universal V1.2.7 Console (test)\",\"uptime\":";
+  json+="\",\"firmware\":\"Universal V1.2.8 Console (test)\"";
+  json+=",\"boardId\":\"";json+=BOARD_ID;
+  json+="\",\"hardwareRev\":\"";json+=HARDWARE_REV;
+  json+="\",\"firmwareType\":\"";json+=FIRMWARE_NAME;
+  json+="\",\"firmwareVersion\":\"";json+=FIRMWARE_VERSION;
+  json+="\",\"controller\":\"";
+#if CONFIG_IDF_TARGET_ESP32S3
+  json+="ESP32-S3";
+#elif CONFIG_IDF_TARGET_ESP32C3
+  json+="ESP32-C3";
+#else
+  json+="ESP32";
+#endif
+  json+="\",\"touchGpio\":";json+=String(TOUCH_PIN);
+  json+=",\"pwmGpio\":";json+=String(LED_PWM_PIN);
+  json+=",\"uptime\":";
   json+=String(millis());
   json+=",\"wifi\":";
   json+=(connected?"true":"false");
@@ -868,8 +917,8 @@ void webControlBegin()
     }
   });
 
-  Serial.println("Wi-Fi setup: Universal V1.2.7 Console (test).");
-  diagLog("[SYSTEM] Firmware V1.2.7 started");
+  Serial.println("Wi-Fi setup: Universal V1.2.8 Console (test).");
+  diagLog("[SYSTEM] Firmware V1.2.8 started");
   optionalMqttBegin(deviceSuffix);
   server.on("/",HTTP_GET,sendControl);
   server.on("/diagnostics",HTTP_GET,sendDiagnosticsPage);

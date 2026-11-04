@@ -2,7 +2,7 @@
   Touch Light Project 
   Seeed XIAO ESP32-C3 on Rev1H board (GPIO21 touch, GPIO4 PWM)
   Seeed XIAP ESP32-S3 on Rev1H board (GPIO43 touch, GPIO3 PWM)
-  Software Rev V1.2.7
+  Software Rev V1.2.8
 
   Touch input, LED PWM output and heartbeat GPIO are configured in BoardConfig.h.
   GPIO connections verified from PCB routing and functional touch/PWM tests.
@@ -25,12 +25,10 @@
 
 // GPIO mapping for the verified Rev1H board 0008.
 #include "BoardConfig.h"
+#include "FirmwareIdentity.h"
 
 // TECH 49 LAB - FIRMWARE IDENTIFICATION
-const char* BOARD_ID         = "0007 LAB RAT";
-const char* HARDWARE_REV     = "Rev 1H";
-const char* FIRMWARE_NAME    = "Production";
-const char* FIRMWARE_VERSION = "1.2.7";
+// Identity constants are shared with the Engineering JSON endpoint.
 
 // Touch configuration
 const bool TOUCH_ACTIVE_STATE = LOW;

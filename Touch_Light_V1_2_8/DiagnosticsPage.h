@@ -23,8 +23,9 @@ a{color:#7dd3fc}p{line-height:1.5}small{color:#b8cce3}
 font:15px ui-monospace,Menlo,monospace}
 /* Readable Wi-Fi signal rating with a dot; color is not the only cue. */
 .signalQuality{display:inline-flex;align-items:center;gap:7px}
-.signalDot{width:12px;height:12px;border-radius:50%;flex:none;
-background:currentColor;box-shadow:0 0 5px currentColor}
+.signalDot{width:20px;height:20px;border-radius:50%;flex:none;
+background:radial-gradient(circle at 30% 25%,#ffffffaa,currentColor 55%,#152032 100%);
+border:1px solid #ffffff66;box-shadow:inset 0 2px 3px #ffffff66,inset 0 -3px 4px #0008,0 0 11px currentColor}
 .signalQuality.excellent{color:#4ade80}
 .signalQuality.good{color:#60a5fa}
 .signalQuality.marginal{color:#facc15}
@@ -100,6 +101,13 @@ aria-label="Back to Touch Light controls">&#8592; Back to Lamp</button>
 <div class="card">
 <div class="row"><span>Device</span><span id="device">—</span></div>
 <div class="row"><span>Firmware</span><span id="version">—</span></div>
+<div class="row"><span>Board ID</span><span id="boardId">—</span></div>
+<div class="row"><span>Hardware revision</span><span id="hardwareRev">—</span></div>
+<div class="row"><span>Firmware type</span><span id="firmwareType">—</span></div>
+<div class="row"><span>Firmware version</span><span id="firmwareVersion">—</span></div>
+<div class="row"><span>Controller</span><span id="controller">—</span></div>
+<div class="row"><span>Touch GPIO</span><span id="touchGpio">—</span></div>
+<div class="row"><span>PWM GPIO</span><span id="pwmGpio">—</span></div>
 <div class="row"><span>Local time (browser)</span><span id="clock">—</span></div>
 <div class="row"><span>Uptime</span><span id="uptime">—</span></div>
 <div class="row"><span>Home Wi-Fi</span><span id="wifi">—</span></div>
@@ -114,6 +122,13 @@ aria-label="Back to Touch Light controls">&#8592; Back to Lamp</button>
 <small class="wifiGuide">Wi-Fi signal guide: Excellent (−60 dBm or stronger),
 Good (−61 to −70 dBm), Marginal (−71 to −80 dBm),
 Weak (below −80 dBm). Gray means not connected.</small>
+</div>
+<div class="card"><h2>Browser preferences</h2>
+<label for="buttonSoundToggle">🔊 Button Sound</label>
+<input type="checkbox" id="buttonSoundToggle" onchange="setButtonSound(this.checked)">
+<strong id="buttonSoundState">ON</strong>
+<p><small>Same short beep for every web button. Saved separately on this browser; the physical touch pad remains silent.</small></p>
+<div><strong>Current Browser: </strong><span id="currentBrowserName">Unnamed browser</span></div>
 </div>
 <div class="card"><h2>Live system log</h2>
 <small>Updates every two seconds. These messages live in RAM and reset
@@ -182,6 +197,43 @@ A web restart works only while the controller is responsive;
 a watchdog may recover a software hang. This is NOT factory reset.</small>
 </div>
 <script>
+
+// Shared browser-local audio preference. A click is a user gesture, so the
+// Web Audio oscillator is permitted on modern mobile browsers.
+const SOUND_KEY='tech49.buttonSound.v1';
+let buttonSound=true;
+try{buttonSound=localStorage.getItem(SOUND_KEY)!=='off';}catch(e){}
+function playButtonBeep(){
+ if(!buttonSound)return;
+ try{
+  const Ctx=window.AudioContext||window.webkitAudioContext;
+  if(!Ctx)return;
+  const ctx=window.tech49Audio||(window.tech49Audio=new Ctx());
+  if(ctx.state==='suspended')ctx.resume();
+  const osc=ctx.createOscillator(),gain=ctx.createGain(),t=ctx.currentTime;
+  osc.type='sine';osc.frequency.value=880;
+  gain.gain.setValueAtTime(0.0001,t);
+  gain.gain.exponentialRampToValueAtTime(0.09,t+0.008);
+  gain.gain.exponentialRampToValueAtTime(0.0001,t+0.075);
+  osc.connect(gain);gain.connect(ctx.destination);osc.start(t);osc.stop(t+0.078);
+ }catch(e){} // Audio must never interrupt the light or diagnostics controls.
+}
+document.addEventListener('click',e=>{
+ const b=e.target.closest('button,summary');
+ if(b&&!b.disabled)playButtonBeep();
+},true);
+
+function updateSoundSetting(){
+ const c=document.getElementById('buttonSoundToggle');
+ if(c){c.checked=buttonSound;document.getElementById('buttonSoundState').textContent=buttonSound?'ON':'OFF';}
+}
+function setButtonSound(enabled){
+ buttonSound=enabled;
+ try{localStorage.setItem(SOUND_KEY,enabled?'on':'off');}
+ catch(e){document.getElementById('buttonSoundState').textContent='Storage unavailable';return;}
+ updateSoundSetting();
+}
+document.addEventListener('DOMContentLoaded',updateSoundSetting);
 
 const PHONE_NAME_KEY='tech49.browserName.v1';
 let browserName='';
@@ -376,6 +428,8 @@ async function refresh(){
  const x=await res.json();
  const phoneNow=Date.now(); // Local wall clock; available even without internet.
  set('device',x.device);set('version',x.firmware);
+  for(const [id,key] of [['boardId','boardId'],['hardwareRev','hardwareRev'],['firmwareType','firmwareType'],['firmwareVersion','firmwareVersion'],['controller','controller'],['touchGpio','touchGpio'],['pwmGpio','pwmGpio']])set(id,x[key]??'—');
+  set('currentBrowserName',browserName||'Unnamed browser');
  set('clock',localClock(phoneNow));
  set('uptime',duration(x.uptime));
  set('wifi',x.wifi?'Connected':'Not connected');
