@@ -1,7 +1,8 @@
 /*
   Touch Light Project 
   Seeed XIAO ESP32-C3 on Rev1H board (GPIO21 touch, GPIO4 PWM)
-  Software Rev V1.2.6
+  Seeed XIAP ESP32-S3 on Rev1H board (GPIO43 touch, GPIO3 PWM)
+  Software Rev V1.2.7
 
   Touch input, LED PWM output and heartbeat GPIO are configured in BoardConfig.h.
   GPIO connections verified from PCB routing and functional touch/PWM tests.
@@ -24,6 +25,12 @@
 
 // GPIO mapping for the verified Rev1H board 0008.
 #include "BoardConfig.h"
+
+// TECH 49 LAB - FIRMWARE IDENTIFICATION
+const char* BOARD_ID         = "0007 LAB RAT";
+const char* HARDWARE_REV     = "Rev 1H";
+const char* FIRMWARE_NAME    = "Production";
+const char* FIRMWARE_VERSION = "1.2.7";
 
 // Touch configuration
 const bool TOUCH_ACTIVE_STATE = LOW;
@@ -247,18 +254,46 @@ void setup()
     digitalWrite(STATUS_LED_PIN, HIGH);
   }
 
-  Serial.println();
-  Serial.println("-----------------------------");
-  Serial.println("TECH 49 LAB - Touch Light");
-  Serial.printf("Touch GPIO%u / PWM GPIO%u\n", TOUCH_PIN, LED_PWM_PIN);
-  Serial.println("-----------------------------");
+  //Serial.println();
+ // Serial.println("-----------------------------");
+ // Serial.println("TECH 49 LAB - Touch Light");
+ // Serial.printf("Touch GPIO%u / PWM GPIO%u\n", TOUCH_PIN, LED_PWM_PIN);
+ // Serial.println("-----------------------------");
+
+Serial.println();
+Serial.println("========================================");
+Serial.println("       TECH 49 LAB - TOUCH LIGHT");
+Serial.println("========================================");
+
+Serial.print("Board ID       : ");
+Serial.println(BOARD_ID);
+
+Serial.print("Hardware Rev   : ");
+Serial.println(HARDWARE_REV);
+
+Serial.print("Firmware       : ");
+Serial.println(FIRMWARE_NAME);
+
+Serial.print("Firmware Ver   : ");
+Serial.println(FIRMWARE_VERSION);
+
+Serial.println("Controller     : ESP32-S3");
+
+Serial.print("Touch GPIO     : ");
+Serial.println(TOUCH_PIN);
+
+Serial.print("PWM GPIO       : ");
+Serial.println(LED_PWM_PIN);
+
+Serial.println("========================================");
+Serial.println("System initializing...");
 
   // Capture ESP-IDF reset reason and update small nonvolatile reset counters.
   // Must run before web setup so reason is visible in diagnostics immediately.
   resetMonitorBegin();
 
   // Board 0008 touch IC is IQS228B; active-low behaviour verified on bench.
-  pinMode(TOUCH_PIN, TOUCH_INPUT_MODE);
+  pinMode(TOUCH_PIN, INPUT_PULLUP);
 
   bool pwmOK = ledcAttach(LED_PWM_PIN, PWM_FREQUENCY, PWM_RESOLUTION);
 
