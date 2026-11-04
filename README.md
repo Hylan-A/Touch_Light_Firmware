@@ -1,4 +1,4 @@
-# Tech 49 Lab Touch Light — V1.2.6 (test)
+# Tech 49 Lab Touch Light 0008 — V1.2.6 (test)
 
 Removes the fixed board-0008 startup banner; startup now says TECH 49 LAB - Touch Light. The sketch folder retains its project name.
 
@@ -8,7 +8,7 @@ The ID supplies the device name, setup SSID, lowercase mDNS hostname, MQTT clien
 
 ## Install and migrate
 
-Open Touch Light Firmware/Touch Light V1.2.6.ino with the same ESP32-C3 settings used for V1.2.5. Compile/upload over USB. No intentional erase of home Wi-Fi, MQTT settings, setup password, reset counters or test baseline occurs. Hold-to-reset behavior is unchanged.
+Open Touch_Light_0008.ino with the same ESP32-C3 settings used for V1.2.5. Compile/upload over USB. No intentional erase of home Wi-Fi, MQTT settings, setup password, reset counters or test baseline occurs. Hold-to-reset behavior is unchanged.
 
 Board 0012: upload this fix before initial Wi-Fi setup. Record the new setup SSID and existing per-board setup password from Serial Monitor at 115200 baud. Join that network and open http://192.168.4.1 to configure the owner's home Wi-Fi.
 
