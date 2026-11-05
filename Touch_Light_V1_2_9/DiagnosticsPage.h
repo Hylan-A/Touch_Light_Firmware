@@ -259,7 +259,6 @@ function savePhoneName(){
  }
  try{localStorage.setItem(PHONE_NAME_KEY,name);browserName=name;
   set('phoneMessage',name?'✓ Name Saved Successfully — Current Browser: '+name+'. Web commands will use this name in diagnostic logs.':'✓ Name cleared; web commands will show WEB.');
-  set('currentBrowserName',name||'Unnamed browser');
  }catch(e){set('phoneMessage','Browser storage unavailable; name was not saved.');}
 }
 document.addEventListener('DOMContentLoaded',()=>{
@@ -489,7 +488,6 @@ async function refresh(){
  const phoneNow=Date.now(); // Local wall clock; available even without internet.
  set('device',x.device);set('version',x.firmware);
   for(const [id,key] of [['boardId','boardId'],['hardwareRev','hardwareRev'],['firmwareType','firmwareType'],['firmwareVersion','firmwareVersion'],['controller','controller'],['touchGpio','touchGpio'],['pwmGpio','pwmGpio']])set(id,x[key]??'—');
-  set('currentBrowserName',browserName||'Unnamed browser');
  set('clock',localClock(phoneNow));
  set('uptime',duration(x.uptime));
  set('wifi',x.wifi?'Connected':'Not connected');
