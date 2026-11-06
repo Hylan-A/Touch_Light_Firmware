@@ -573,8 +573,8 @@ async function pollReveal(){
       const y=await post('/api/diag/reveal/consume',{token:requestToken});
       if(generation!==revealGeneration || token!==requestToken)return;
       token='';
-      $('secret').textContent='Wi-Fi: '+y.ssid+'\\nPassword: '+y.password+
-        '\\nSetup URL: http://192.168.4.1';
+      $('secret').textContent='Wi-Fi: '+y.ssid+'\nPassword: '+y.password+
+        '\nSetup URL: http://192.168.4.1';
       set('revealMessage','Confirmed! Record the setup information on the lamp label.');
       shownAt=Date.now();
     }else if(x.state==='invalid'){
