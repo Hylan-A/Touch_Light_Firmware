@@ -22,7 +22,7 @@ a{color:#7dd3fc}p{line-height:1.5}small{color:#b8cce3}
 #secret{white-space:pre-wrap;word-break:break-word;color:#ffd38a;
 font:15px ui-monospace,Menlo,monospace}
 /* Readable Wi-Fi signal rating with a dot; color is not the only cue. */
-.signalQuality{display:inline-flex;align-items:center;gap:7px}
+.signalQuality{display:inline-flex;align-items:center;justify-content:flex-end;gap:7px;min-width:0}.signalQuality #rssiText{display:inline-block;width:23ch;text-align:left;font-variant-numeric:tabular-nums}
 .signalBars{display:inline-flex;align-items:flex-end;gap:3px;height:22px;flex:none}
 .signalBars i{display:block;width:5px;border-radius:2px 2px 0 0;background:#435367;border:1px solid #70809944}
 .signalBars i:nth-child(1){height:6px}.signalBars i:nth-child(2){height:10px}
@@ -162,8 +162,7 @@ the actual PWM output is 0%.</small>
 <div class="logTools" role="group" aria-label="Live log controls">
 <button type="button" id="pauseButton" class="pause"
 onclick="toggleLogPause()">&#9208; Pause</button>
-<button type="button" class="clear"
-onclick="clearLog()">&#10005; Clear Log</button>
+<button type="button" id="clearLogButton" class="clear holdButton" data-hold="clear" aria-label="Hold for two seconds to clear log">&#10005; Hold 2 sec — Clear Log</button>
 <button type="button" class="save"
 onclick="saveLog()">&#8681; Save Text</button>
 <button type="button" class="save" onclick="exportColorLog(false)">Save Color Log</button>
@@ -311,6 +310,7 @@ function installHoldButton(id,action){
  b.addEventListener('click',e=>e.preventDefault());
 }
 document.addEventListener('DOMContentLoaded',()=>{
+ installHoldButton('clearLogButton',clearLog);
  installHoldButton('resetCountsButton',resetTestCounts);
  installHoldButton('restartButton',requestRestart);
 });
@@ -386,7 +386,6 @@ function toggleLogPause(){
  if(!logPaused)refresh();
 }
 async function clearLog(){
- if(!confirm('Clear all currently stored diagnostic messages?'))return;
  try{
   await post('/api/diag/clear');
   logPaused=false;updatePauseButton();
