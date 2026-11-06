@@ -268,6 +268,8 @@ document.addEventListener('DOMContentLoaded',()=>{
 });
 
 let token='',shownAt=0;
+let revealPolling=false;
+let revealGeneration=0;
 let logPaused=false;
 let latestSnapshot=null;
 let latestSnapshotTime=0;
@@ -539,31 +541,54 @@ async function post(path,args){
  return r.json();
 }
 async function beginReveal(){
- token='';shownAt=0;$('secret').textContent='';
- try{const result=await post('/api/diag/reveal/start');
- token=result.token;
- set('revealMessage','Hold the PHYSICAL touch pad for four seconds...');
- }catch(e){set('revealMessage','Unable to start confirmation.');}
+  // Invalidate any older status/consume request before starting a new challenge.
+  const generation=++revealGeneration;
+  token='';shownAt=0;$('secret').textContent='';
+  set('revealMessage','Starting physical confirmation...');
+  try{
+    const result=await post('/api/diag/reveal/start');
+    if(generation!==revealGeneration)return;
+    token=result.token;
+    set('revealMessage','Hold the PHYSICAL touch pad for four seconds...');
+  }catch(e){
+    if(generation===revealGeneration)set('revealMessage','Unable to start confirmation.');
+  }
 }
 async function pollReveal(){
- if(shownAt && Date.now()-shownAt>45000){
- $('secret').textContent='';shownAt=0;
- set('revealMessage','Password hidden again.');
- }
- if(!token)return;
- try{
- const x=await post('/api/diag/reveal/status',{token});
- if(x.state==='confirmed'){
- const y=await post('/api/diag/reveal/consume',{token});
- token='';
- $('secret').textContent='Wi-Fi: '+y.ssid+'\nPassword: '+y.password+
- '\nSetup URL: http://192.168.4.1';
- set('revealMessage','Confirmed! Record the setup information on the lamp label.');
- shownAt=Date.now();
- }else if(x.state==='invalid'){
- token='';set('revealMessage','Request expired; try again.');
- }
- }catch(e){token='';set('revealMessage','Confirmation failed; try again.');}
+  if(shownAt && Date.now()-shownAt>45000){
+    $('secret').textContent='';shownAt=0;
+    set('revealMessage','Password hidden again.');
+  }
+  // Prevent overlapping requests: an old invalid-token response must not
+  // overwrite a successful reveal from a newer poll.
+  if(!token || revealPolling)return;
+  const requestToken=token;
+  const generation=revealGeneration;
+  revealPolling=true;
+  try{
+    const x=await post('/api/diag/reveal/status',{token:requestToken});
+    if(generation!==revealGeneration || token!==requestToken)return;
+    if(x.state==='confirmed'){
+      // Claim the confirmation before the next timer can start a second poll.
+      const y=await post('/api/diag/reveal/consume',{token:requestToken});
+      if(generation!==revealGeneration || token!==requestToken)return;
+      token='';
+      $('secret').textContent='Wi-Fi: '+y.ssid+'\\nPassword: '+y.password+
+        '\\nSetup URL: http://192.168.4.1';
+      set('revealMessage','Confirmed! Record the setup information on the lamp label.');
+      shownAt=Date.now();
+    }else if(x.state==='invalid'){
+      token='';
+      set('revealMessage','Request expired; try again.');
+    }
+  }catch(e){
+    if(generation===revealGeneration && token===requestToken){
+      token='';
+      set('revealMessage','Confirmation failed; try again.');
+    }
+  }finally{
+    revealPolling=false;
+  }
 }
 refresh();setInterval(refresh,1000);setInterval(pollReveal,1200);
 </script></body></html>
