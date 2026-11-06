@@ -292,6 +292,7 @@ void sendDiagnostics()
   json+=deviceName;
   json+="\",\"firmware\":\"Universal V1.3.0 Console (test)\"";
   json+=",\"boardId\":\"";json+=BOARD_ID;
+  json += "\",\"macAddress\":\""; json += WiFi.macAddress();
   json+="\",\"hardwareRev\":\"";json+=HARDWARE_REV;
   json+="\",\"firmwareType\":\"";json+=FIRMWARE_NAME;
   json+="\",\"firmwareVersion\":\"";json+=FIRMWARE_VERSION;

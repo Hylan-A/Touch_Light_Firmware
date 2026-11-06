@@ -114,6 +114,7 @@ aria-label="Back to Touch Light controls">&#8592; Back to Lamp</button>
 <div class="row"><span>Device</span><span id="device">—</span></div>
 <div class="row"><span>Firmware</span><span id="version">—</span></div>
 <div class="row"><span>Board ID</span><span id="boardId">—</span></div>
+<div class="row"><span>MAC Address</span><span id="macAddress">--</span></div>
 <div class="row"><span>Hardware revision</span><span id="hardwareRev">—</span></div>
 <div class="row"><span>Firmware type</span><span id="firmwareType">—</span></div>
 <div class="row"><span>Firmware version</span><span id="firmwareVersion">—</span></div>
@@ -485,6 +486,7 @@ async function refresh(){
  const x=await res.json();
  const phoneNow=Date.now(); // Local wall clock; available even without internet.
  set('device',x.device);set('version',x.firmware);
+ set('macAddress', x.macAddress);
   for(const [id,key] of [['boardId','boardId'],['hardwareRev','hardwareRev'],['firmwareType','firmwareType'],['firmwareVersion','firmwareVersion'],['controller','controller'],['touchGpio','touchGpio'],['pwmGpio','pwmGpio']])set(id,x[key]??'—');
  set('clock',localClock(phoneNow));
  set('uptime',duration(x.uptime));

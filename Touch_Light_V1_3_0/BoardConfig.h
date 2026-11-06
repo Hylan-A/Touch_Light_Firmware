@@ -21,10 +21,15 @@
   #error "Board 0008 ESP32-C3 pinout unverified. Check BoardConfig.h, set touch/PWM/status pins correctly, then set BOARD_0008_PINOUT_CONFIRMED to 1."
 #endif
 
-constexpr uint8_t TOUCH_PIN = 43;      // XIAO ESP32-C3 D6 <- IQS228B OUT (Rev1H PCB)
-constexpr uint8_t LED_PWM_PIN = 3;     // Seeed XIAO ESP32-C3 D2 -> R3 -> Q1 gate (Rev1H PCB)
+constexpr uint8_t TOUCH_PIN = 21;      // XIAO ESP32-C3 D6 <- IQS228B OUT (Rev1H PCB)
+constexpr uint8_t LED_PWM_PIN = 4;     // Seeed XIAO ESP32-C3 D2 -> R3 -> Q1 gate (Rev1H PCB)
 constexpr uint8_t STATUS_LED_PIN = 8;  // unused unless STATUS_LED_PRESENT is true
 constexpr bool STATUS_LED_PRESENT = false; // Seeed XIAO C3 lacks user heartbeat LED
+
+//constexpr uint8_t TOUCH_PIN = 43;      // XIAO ESP32-S3 D6 <- IQS228B OUT (Rev1H PCB)
+//constexpr uint8_t LED_PWM_PIN = 3;     // Seeed XIAO ESP32-S3 D2 -> R3 -> Q1 gate (Rev1H PCB)
+//constexpr uint8_t STATUS_LED_PIN = 8;  // unused unless STATUS_LED_PRESENT is true
+//constexpr bool STATUS_LED_PRESENT = false; // Seeed XIAO C3 lacks user heartbeat LED
 
 // IQS228B touch sensor active LOW, confirmed by Touch Light 0008 bench testing.
 constexpr uint8_t TOUCH_INPUT_MODE = INPUT_PULLDOWN;

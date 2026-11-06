@@ -275,7 +275,8 @@ Serial.println(FIRMWARE_NAME);
 Serial.print("Firmware Ver   : ");
 Serial.println(FIRMWARE_VERSION);
 
-Serial.println("Controller     : ESP32-S3");
+
+Serial.println("Controller    : " + String(ESP.getChipModel()));
 
 Serial.print("Touch GPIO     : ");
 Serial.println(TOUCH_PIN);
