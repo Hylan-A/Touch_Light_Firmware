@@ -122,7 +122,6 @@ aria-label="Exit help">&#10005; Exit</button>
 </div>
 <h2 id="name">Connecting...</h2>
 <p class="webAddress"><strong>Web address:</strong><br><a id="webAddress" style="color:#add9ff;overflow-wrap:anywhere">Checking...</a><br><small>Share with another phone on the same home Wi-Fi.</small></p>
-<div class="telemetry"><div class="setupTile"><span id="wifiStatus">Home Wi-Fi: checking</span><span id="frontSignal" class="frontSignal offline" aria-label="Wi-Fi signal checking"><span class="signalBars" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span><span id="frontRssiText">Checking...</span></span></div><div class="setupTile"><span id="mqttStatus">MQTT: checking</span><span id="mqttBroker">Broker: —</span></div></div>
 <div class="consoleReadout"><div><small>BRIGHTNESS PRESET</small><h2 id="status" aria-live="polite">Checking light...</h2></div><strong><span id="percent">--</span>%</strong></div>
 <div class="segments" id="segments" aria-hidden="true"></div><div class="powerControls">
 <button id="powerOn" aria-pressed="false" class="on" onclick="setPower('on')">ON</button>
@@ -130,6 +129,7 @@ aria-label="Exit help">&#10005; Exit</button>
 </div><h2>Brightness preset: <span id="level">--</span> / 255</h2>
 <input aria-label="Brightness preset" type="range" id="brightness" min="5" max="255" value="180"
        oninput="showBrightness(this.value)" onchange="setBrightness(this.value)">
+<div class="telemetry"><div class="setupTile"><span id="wifiStatus">Home Wi-Fi: checking</span><span id="frontSignal" class="frontSignal offline" aria-label="Wi-Fi signal checking"><span class="signalBars" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span><span id="frontRssiText">Checking...</span></span></div><div class="setupTile"><span id="mqttStatus">MQTT: checking</span><span id="mqttBroker">Broker: —</span></div></div>
 <p><small id="network">Local network control</small></p>
 <button type="button" class="engineeringButton" onclick="window.location.assign('/diagnostics')">⚙ ENGINEERING</button>
 
@@ -177,11 +177,14 @@ const PHONE_NAME_KEY='tech49.browserName.v1';
 let browserName='';
 try{browserName=localStorage.getItem(PHONE_NAME_KEY)||'';}catch(e){}
 let sliderEditing=false;
-let lastSliderTime=0;
+let pendingBrightness=null;
+let pendingBrightnessSince=0;
+let brightnessRequestId=0;
+let brightnessError=false;
 const level=document.getElementById('level');
 const slider=document.getElementById('brightness');
 function updateMeter(n){document.getElementById('percent').textContent=Math.round(Number(n)*100/255);document.getElementById('segments').style.setProperty('--fill',Number(n)*100/255+'%');}
-function showBrightness(n){sliderEditing=true;lastSliderTime=Date.now();level.textContent=n;updateMeter(n);}
+function showBrightness(n){sliderEditing=true;pendingBrightness=null;brightnessError=false;level.textContent=n;updateMeter(n);}
 function showExitHelp(){
   document.getElementById('exitHelp').classList.add('open');
 }
@@ -204,7 +207,26 @@ function updateFrontSignal(rssi,connected){
  el.setAttribute('aria-label','Wi-Fi signal: '+rating+(valid?', '+rssi+' dBm':''));
 }
 function setPower(v){send({power:v});}
-function setBrightness(v){sliderEditing=false;send({brightness:v});}
+async function setBrightness(v){
+  sliderEditing=false;
+  const target=Number(v);
+  const requestId=++brightnessRequestId;
+  pendingBrightness=target;
+  pendingBrightnessSince=Date.now();
+  brightnessError=false;
+  try {
+    const response=await fetch('/api/set',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},
+      body:new URLSearchParams({brightness:String(target),clientName:browserName})});
+    if(!response.ok)throw Error('Brightness command rejected');
+    if(requestId===brightnessRequestId)await refresh();
+  } catch(e){
+    if(requestId===brightnessRequestId){
+      pendingBrightness=null;
+      brightnessError=true;
+      document.getElementById('status').textContent='Brightness update failed — check connection';
+    }
+  }
+}
 async function refresh(){
   try {
     const resp=await fetch('/api/state',{cache:'no-store'});
@@ -213,15 +235,28 @@ async function refresh(){
     document.getElementById('name').textContent=s.name;
     const address=document.getElementById('webAddress');
     address.textContent=s.homeWebAddress;address.href=s.homeWebAddress;
-    document.getElementById('status').textContent=s.power?'LIGHT ON':'LIGHT OFF — preset';
+    if(!brightnessError)document.getElementById('status').textContent=s.power?'LIGHT ON':'LIGHT OFF — preset';
     document.getElementById('powerOn').setAttribute('aria-pressed',String(s.power));
     document.getElementById('powerOff').setAttribute('aria-pressed',String(!s.power));
     document.getElementById('wifiStatus').textContent=s.mode+': '+(s.wifi?'Connected':(s.setup?'Direct connection':'Disconnected'));
     updateFrontSignal(s.rssi,s.wifi);
     document.getElementById('mqttStatus').textContent='MQTT: '+(s.mqttEnabled?(s.mqttConnected?'Connected':'Disconnected'):'Disabled');
     document.getElementById('mqttBroker').textContent='Broker: '+(s.mqttHost||'Not configured');
-    if(!sliderEditing || Date.now()-lastSliderTime>2500){
-      sliderEditing=false; slider.value=s.brightness;level.textContent=s.brightness;updateMeter(s.brightness);
+    // Keep the user-selected slider position until the device reports the new value.
+    // Old status requests can arrive after a brightness command; never let them
+    // overwrite the new position while the command is pending.
+    if(pendingBrightness!==null){
+      if(Number(s.brightness)===pendingBrightness){
+        pendingBrightness=null;
+        brightnessError=false;
+      }else if(Date.now()-pendingBrightnessSince>8000){
+        pendingBrightness=null;
+        brightnessError=true;
+        document.getElementById('status').textContent='Brightness not confirmed — check connection';
+      }
+    }
+    if(!sliderEditing && pendingBrightness===null && !brightnessError){
+      slider.value=s.brightness;level.textContent=s.brightness;updateMeter(s.brightness);
     }
     document.getElementById('network').textContent=s.mode+'  |  '+s.ip;
 
